@@ -4,8 +4,7 @@ extern crate time;
 use game::Game;
 use gfx::input::Input;
 use gfx::assets::Assets;
-use std::collections::HashMap;
-use sdl2::image::{self, LoadTexture, INIT_PNG, INIT_JPG};
+use sdl2::image::{INIT_PNG, INIT_JPG};
 use sdl2::rect::{Point, Rect};
 use sdl2::event::{Event, WindowEvent};
 

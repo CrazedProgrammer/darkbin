@@ -1,16 +1,14 @@
 extern crate walkdir;
 extern crate process_path;
 
-use sdl2::render::Texture;
-use std::collections::HashMap;
-use sdl2::render::{Canvas};
-use sdl2::video::{WindowContext};
-use sdl2::render::TextureCreator;
-use std::path::{Path,PathBuf};
-use std::ffi::OsStr;
 use self::walkdir::WalkDir;
 use self::process_path::get_executable_path;
 use sdl2::image::LoadTexture;
+use sdl2::render::{Texture,TextureCreator};
+use sdl2::video::WindowContext;
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::ffi::OsStr;
 use std::rc::Rc;
 
 pub struct Assets<'a> {
@@ -32,7 +30,7 @@ impl<'a> Assets<'a> {
             let entry_if = entry.unwrap();
             let path = entry_if.path();
             // definitely clean this up someday
-            let mut asset_str = "".to_string();
+            let mut asset_str;
             {
                 let path_str = path.to_str().unwrap().to_string();
                 let asset_str_parts = path_str.split("assets").collect::<Vec<_>>();
@@ -40,14 +38,13 @@ impl<'a> Assets<'a> {
                 if asset_str_temp == "" {
                     asset_str = "".to_string();
                 } else {
-                    asset_str = asset_str_temp.chars().rev().take(asset_str_temp.chars().count() - 1).collect::<String>().chars().rev().collect();
+                    asset_str = asset_str_temp.chars().rev().take(asset_str_temp.chars().count() - 1).collect::<String>().chars().rev().collect::<String>().replace("\\", "/");
                 }
-                println!("{}: {}", path.to_str().unwrap(), asset_str);
             }
 
             if path.is_file() {
                 match path.extension().unwrap_or(OsStr::new("")).to_str().unwrap_or("") {
-                    "png" => {
+                    "png" | "jpg" => {
                         self.textures.insert(asset_str, Rc::new(creator.load_texture(path).unwrap()));
                     },
                     _ => {},
