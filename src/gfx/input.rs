@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use sdl2::rect::{Point, Rect};
+use sdl2::rect::Point;
 use sdl2::keyboard::Scancode;
 use sdl2::mouse::MouseButton;
 
@@ -8,7 +8,7 @@ pub struct Input {
     prev_keys: HashMap<Scancode, bool>,
     mouse_buttons: HashMap<MouseButton, bool>,
     prev_mouse_buttons: HashMap<MouseButton, bool>,
-    pub mouse: Point,
+    pub mouse_pos: Point,
 }
 
 impl Input {
@@ -18,7 +18,7 @@ impl Input {
             prev_keys: HashMap::new(),
             mouse_buttons: HashMap::new(),
             prev_mouse_buttons: HashMap::new(),
-            mouse: Point::new(0, 0),
+            mouse_pos: Point::new(0, 0),
         }
     }
 

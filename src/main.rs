@@ -1,10 +1,12 @@
 extern crate sdl2;
 extern crate time;
-mod ui;
+mod gfx;
 mod game;
 
-use ui::main_loop;
+use game::Game;
+use gfx::window::main_loop;
 
 fn main() {
-    main_loop();
+    let mut game = Game::new();
+    main_loop(&mut game);
 }

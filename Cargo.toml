@@ -4,6 +4,12 @@ version = "0.1.0"
 authors = ["CrazedProgrammer <crazedprogrammer@gmail.com>"]
 
 [dependencies]
-sdl2 = "0.31.*"
 time = "0.1.39"
 serde_json = "1.0.*"
+walkdir = "2.0.*"
+process_path = "0.1.*"
+
+[dependencies.sdl2]
+version = "0.31.*"
+default-features = false
+features = ["image"]
