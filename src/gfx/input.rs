@@ -3,6 +3,7 @@ use sdl2::rect::Point;
 use sdl2::keyboard::Scancode;
 use sdl2::mouse::MouseButton;
 
+#[derive(Clone)]
 pub struct Input {
     keys: HashMap<Scancode, bool>,
     prev_keys: HashMap<Scancode, bool>,

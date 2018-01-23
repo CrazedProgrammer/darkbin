@@ -24,6 +24,7 @@ pub fn main_loop(game: &mut Game) {
 
     let mut assets = Assets::new();
     assets.load_all(&mut texture_creator);
+    game.init();
 
     let mut input = Input::new();
     let mut prev_nano_time = time::precise_time_ns();
