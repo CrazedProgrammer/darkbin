@@ -18,10 +18,9 @@ impl Event {
 
 #[derive(Clone)]
 pub enum Action {
-    QuitGame,
     AddEntity(Rc<Entity>),
-    RemoveEntity(u64),
     DoEntity(u64, EntityAction),
+    RemoveEntity(u64),
 }
 
 #[derive(Clone)]

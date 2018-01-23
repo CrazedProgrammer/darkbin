@@ -30,16 +30,19 @@ impl Game {
     }
 
     pub fn init(&mut self) {
-        self.events.push(Event::new(0f32, Action::AddEntity(Rc::new(Player::new()))));
+        self.events.push(Event::new(0f32, Action::AddEntity(Rc::new(Player::new(0f32)))));
     }
 
     pub fn update(&mut self, input: &Input, d_time: f32) {
+        println!("Entities: {} FPS: {}", self.state.entities.len(), 1f32 / d_time);
         self.state.input = input.clone();
         let lock_state = self.state.clone();
 
+        /*
         for entity_pair in self.state.entities.iter_mut() {
             self.events.push(Event::new(0f32, Action::DoEntity(*entity_pair.0, EntityAction::Update(d_time))));
         }
+        */
 
         let mut i = 0;
         while i < self.events.len() {
@@ -51,19 +54,30 @@ impl Game {
                         self.state.add_entity(entity);
                     },
                     Action::DoEntity(entity_id, action) => {
-                        let mut entity = Rc::get_mut(self.state.entities.get_mut(&entity_id).unwrap()).unwrap();
-                        entity.do_action(&action, &lock_state);
+                        match (self.state.entities.get_mut(&entity_id)) {
+                            Some(mut entity_rc) => {
+                                let entity = Rc::get_mut(entity_rc).unwrap();
+                                let new_events = entity.do_action(&action, &lock_state);
+                                self.events.extend(new_events);
+                            },
+                            None => { },
+                        }
                     },
                     Action::RemoveEntity(entity_id) => {
                         self.state.remove_entity(entity_id);
                     },
-                    _ => {},
                 }
                 self.events.remove(i);
             } else {
                 self.events[i] = event;
                 i += 1;
             }
+        }
+
+        for entity_rc in self.state.entities.iter_mut() {
+            let mut entity = Rc::get_mut(entity_rc.1).unwrap();
+            let new_events = entity.do_action(&EntityAction::Update(d_time), &lock_state);
+            self.events.extend(new_events);
         }
     }
 
