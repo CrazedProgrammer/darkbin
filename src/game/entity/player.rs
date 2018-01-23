@@ -1,5 +1,6 @@
 use game::entity::{Entity, EntityShape};
-use game::GameState;
+use game::event::EntityAction;
+use game::state::GameState;
 use sdl2::rect::Point;
 use sdl2::keyboard::Scancode;
 use std::rc::Rc;
@@ -19,10 +20,16 @@ impl Player {
 }
 
 impl Entity for Player {
-    fn update(&mut self, state: &GameState) {
-        if state.input.get_key(Scancode::Space) {
-            self.shape.position.0 += 60f32 * state.d_time;
+    fn do_action(&mut self, action: &EntityAction, state: &GameState) -> Vec<EntityAction> {
+        match action {
+            &EntityAction::Update(d_time) => {
+                if state.input.get_key(Scancode::Space) {
+                    self.shape.position.0 += 60f32 * d_time;
+                }
+            }
+            _ => { }
         }
+        vec![]
     }
 
     fn get_shape(&self) -> &EntityShape {

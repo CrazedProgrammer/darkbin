@@ -6,76 +6,64 @@ use sdl2::render::{Canvas};
 use sdl2::video::{Window};
 use sdl2::pixels::{Color};
 use sdl2::rect::{Point, Rect};
+use game::event::{Event,Action,EntityAction};
+use game::state::GameState;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
 mod entity;
 mod event;
-
-pub struct GameState {
-    pub d_time: f32,
-    pub input: Input,
-    entities: HashMap<u64, Rc<Entity>>,
-    next_entity_id: u64,
-}
+mod state;
 
 pub struct Game {
     state: GameState,
+    events: Vec<Event>,
 }
-
-impl GameState {
-    pub fn new() -> GameState {
-        GameState {
-            d_time: 1e-9f32,
-            input: Input::new(),
-            entities: HashMap::new(),
-            next_entity_id: 0u64,
-        }
-    }
-
-    pub fn add_entity(&mut self, entity: Rc<Entity>) -> u64 {
-        let entity_id = self.next_entity_id;
-        self.entities.insert(entity_id, entity);
-        self.next_entity_id += 1u64;
-        entity_id
-    }
-}
-
-impl Clone for GameState {
-    fn clone(&self) -> GameState {
-        GameState {
-            d_time: self.d_time,
-            input: self.input.clone(),
-            // is this the right indentation?
-            entities: self.entities.iter()
-                .map(|ref entity_pair|
-                    (entity_pair.0.clone(), entity_pair.1.rc_clone()))
-                .collect::<HashMap<_,_>>(),
-            next_entity_id: self.next_entity_id,
-        }
-    }
-}
-
 
 impl Game {
     pub fn new() -> Game {
         Game {
             state: GameState::new(),
+            events: vec![],
         }
     }
 
     pub fn init(&mut self) {
-        self.state.add_entity(Rc::new(Player::new()));
+        self.events.push(Event::new(0f32, Action::AddEntity(Rc::new(Player::new()))));
     }
 
     pub fn update(&mut self, input: &Input, d_time: f32) {
         self.state.input = input.clone();
-        self.state.d_time = d_time;
         let lock_state = self.state.clone();
-        for mut entity_pair in self.state.entities.iter_mut() {
-            let mut entity = Rc::get_mut(&mut entity_pair.1).unwrap();
-            entity.update(&lock_state);
+
+        for entity_pair in self.state.entities.iter_mut() {
+            self.events.push(Event::new(0f32, Action::DoEntity(*entity_pair.0, EntityAction::Update(d_time))));
+        }
+
+        let mut i = 0;
+        while i < self.events.len() {
+            let mut event = (&self.events[i]).clone();
+            event.time -= d_time;
+            if event.time <= 0f32 {
+                match event.action {
+                    Action::AddEntity(entity) => {
+                        self.state.add_entity(entity);
+                    },
+                    Action::DoEntity(entity_id, action) => {
+                        let mut entity = Rc::get_mut(self.state.entities.get_mut(&entity_id).unwrap()).unwrap();
+                        entity.do_action(&action, &lock_state);
+                    },
+                    Action::RemoveEntity(entity_id) => {
+                        self.state.remove_entity(entity_id);
+                    },
+                    _ => {},
+                }
+                self.events.remove(i);
+            } else {
+                self.events[i] = event;
+                i += 1;
+            }
         }
     }
 
