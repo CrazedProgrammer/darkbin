@@ -31,6 +31,7 @@ impl Game {
 
     pub fn init(&mut self) {
         self.events.push(Event::new(0f32, Action::AddEntity(Rc::new(Player::new(0f32)))));
+        self.state.viewport.zoom = 10f32;
     }
 
     pub fn update(&mut self, input: &Input, d_time: f32) {
@@ -54,7 +55,7 @@ impl Game {
                         self.state.add_entity(entity);
                     },
                     Action::DoEntity(entity_id, action) => {
-                        match (self.state.entities.get_mut(&entity_id)) {
+                        match self.state.entities.get_mut(&entity_id) {
                             Some(mut entity_rc) => {
                                 let entity = Rc::get_mut(entity_rc).unwrap();
                                 let new_events = entity.do_action(&action, &lock_state);
@@ -87,7 +88,14 @@ impl Game {
         for entity_pair in self.state.entities.iter() {
             let entity = entity_pair.1;
             let shape = entity.get_shape();
-            canvas.copy(&assets.get_texture(&shape.texture), None, Some(Rect::new(shape.position.0 as i32, shape.position.1 as i32, shape.size.0 as u32, shape.size.1 as u32))).unwrap();
+            let window_size = canvas.window().size();
+            let center_x: f32 = (shape.position.0 - self.state.viewport.position.0) * self.state.viewport.zoom + (window_size.0 as f32) / 2f32;
+            let center_y: f32 = (shape.position.1 - self.state.viewport.position.1) * self.state.viewport.zoom + (window_size.1 as f32) / 2f32;
+            let width: f32 = shape.size.0 * self.state.viewport.zoom;
+            let height: f32 = shape.size.1 * self.state.viewport.zoom;
+            let x: i32 = (center_x - width / 2f32) as i32;
+            let y: i32 = (center_y - height / 2f32) as i32;
+            canvas.copy(&assets.get_texture(&shape.texture), None, Some(Rect::new(x, y, width as u32, height as u32))).unwrap();
         }
     }
 }
