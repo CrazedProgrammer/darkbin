@@ -1,6 +1,7 @@
 use game::entity::{Entity, EntityShape};
 use game::GameState;
 use sdl2::rect::Point;
+use sdl2::keyboard::Scancode;
 use std::rc::Rc;
 use std::cell::RefCell;
 
@@ -19,8 +20,9 @@ impl Player {
 
 impl Entity for Player {
     fn update(&mut self, state: &GameState) {
-        self.shape.position.0 += 60f32 * state.d_time;
-        println!("{}", state.d_time);
+        if state.input.get_key(Scancode::Space) {
+            self.shape.position.0 += 60f32 * state.d_time;
+        }
     }
 
     fn get_shape(&self) -> &EntityShape {

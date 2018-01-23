@@ -11,6 +11,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 mod entity;
+mod event;
 
 pub struct GameState {
     pub d_time: f32,

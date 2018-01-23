@@ -25,9 +25,7 @@ impl Input {
 
     pub fn push_next(&mut self) {
         self.prev_keys = self.keys.clone();
-        self.keys = HashMap::new();
         self.prev_mouse_buttons = self.mouse_buttons.clone();
-        self.mouse_buttons = HashMap::new();
     }
 
     // getters
