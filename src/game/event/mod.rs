@@ -25,5 +25,6 @@ pub enum Action {
 
 #[derive(Clone)]
 pub enum EntityAction {
+    Init,
     Update(f32),
 }

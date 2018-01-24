@@ -5,8 +5,8 @@ use game::Game;
 use gfx::input::Input;
 use gfx::assets::Assets;
 use sdl2::image::{INIT_PNG, INIT_JPG};
-use sdl2::rect::{Point, Rect};
-use sdl2::event::{Event, WindowEvent};
+use sdl2::rect::Point;
+use sdl2::event::Event;
 
 pub fn main_loop(game: &mut Game) {
     let sdl_context = sdl2::init().unwrap();

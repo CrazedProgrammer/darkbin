@@ -10,15 +10,16 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::ffi::OsStr;
 use std::rc::Rc;
+use util::Hasher;
 
 pub struct Assets<'a> {
-    textures: HashMap<String, Rc<Texture<'a>>>,
+    textures: HashMap<String, Rc<Texture<'a>>, Hasher>,
 }
 
 impl<'a> Assets<'a> {
     pub fn new() -> Assets<'a> {
         Assets {
-            textures: HashMap::new(),
+            textures: HashMap::<_, _, _>::default(),
         }
     }
 
