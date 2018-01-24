@@ -1,6 +1,4 @@
-extern crate twox_hash;
-
 use std::hash::BuildHasherDefault;
-use twox_hash::XxHash;
+use fnv::FnvHasher;
 
-pub type Hasher = BuildHasherDefault<XxHash>;
+pub type Hasher = BuildHasherDefault<FnvHasher>;

@@ -1,6 +1,6 @@
 extern crate sdl2;
 extern crate time;
-extern crate twox_hash;
+extern crate fnv;
 mod gfx;
 mod game;
 mod util;

@@ -16,6 +16,9 @@ mod entity;
 mod event;
 mod state;
 
+// for performance debugging purposes
+const DISABLE_DRAW: bool = true;
+
 pub struct Game {
     state: GameState,
     entities: HashMap<u64, Rc<Entity>, Hasher>,
@@ -76,6 +79,9 @@ impl Game {
     pub fn draw(&mut self, canvas: &mut Canvas<Window>, assets: &Assets) {
         canvas.set_draw_color(Color::RGB(255, 255, 255));
         canvas.clear();
+        if DISABLE_DRAW {
+            return;
+        }
 
         for shape_pair in self.state.shapes.iter() {
             let shape = shape_pair.1;
