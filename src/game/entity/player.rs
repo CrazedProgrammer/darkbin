@@ -1,6 +1,7 @@
 use game::entity::{Entity, EntityShape};
 use game::event::{Event, EntityAction, Action};
 use game::state::GameState;
+use gfx::assets::Asset;
 use sdl2::keyboard::Scancode;
 use std::rc::Rc;
 
@@ -24,7 +25,7 @@ impl Entity for Player {
             &EntityAction::Init => {
                 shape.position = (self.x, 0f32);
                 shape.size = (32f32, 32f32);
-                shape.texture = "test.png".to_string();
+                shape.texture = Asset::Test;
             },
             &EntityAction::Update(d_time) => {
                 if state.input.get_key(Scancode::Space) {

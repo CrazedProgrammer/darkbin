@@ -1,7 +1,7 @@
 use game::entity::{Entity,EntityShape};
 use game::entity::player::Player;
 use gfx::input::Input;
-use gfx::assets::Assets;
+use gfx::assets::{Assets, Asset};
 use sdl2::render::{Canvas};
 use sdl2::video::{Window};
 use sdl2::pixels::{Color};
@@ -17,7 +17,7 @@ mod event;
 mod state;
 
 // for performance debugging purposes
-const DISABLE_DRAW: bool = true;
+const DISABLE_DRAW: bool = false;
 
 pub struct Game {
     state: GameState,
@@ -100,7 +100,7 @@ impl Game {
     fn add_entity(&mut self, entity: Rc<Entity>) -> u64 {
         let entity_id = self.next_entity_id;
         self.entities.insert(entity_id, entity);
-        self.state.shapes.insert(entity_id, EntityShape::new(entity_id, (0f32, 0f32), (0f32, 0f32), "none".to_string()));
+        self.state.shapes.insert(entity_id, EntityShape::new(entity_id, (0f32, 0f32), (0f32, 0f32), Asset::None));
         self.events.push(Event::new(0f32, Action::DoEntity(entity_id, EntityAction::Init)));
         self.next_entity_id += 1u64;
         entity_id

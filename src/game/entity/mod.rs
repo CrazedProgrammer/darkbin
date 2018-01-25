@@ -1,5 +1,6 @@
 use game::state::GameState;
 use game::event::{Event,EntityAction};
+use gfx::assets::Asset;
 
 pub mod player;
 
@@ -12,11 +13,11 @@ pub struct EntityShape {
     id: u64,
     pub position: (f32, f32),
     pub size: (f32, f32),
-    pub texture: String,
+    pub texture: Asset,
 }
 
 impl EntityShape {
-    pub fn new(id: u64, position: (f32, f32), size: (f32, f32), texture: String) -> EntityShape {
+    pub fn new(id: u64, position: (f32, f32), size: (f32, f32), texture: Asset) -> EntityShape {
         EntityShape {
             id: id,
             position: position,
