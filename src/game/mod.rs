@@ -45,11 +45,13 @@ impl Game {
         println!("Entities: {} FPS: {}", self.entities.len(), 1f32 / d_time);
         self.state.input = input.clone();
 
+        for event in self.events.iter_mut() {
+            event.time -= d_time;
+        }
 
         let mut i = 0;
         while i < self.events.len() {
-            let mut event = (&self.events[i]).clone();
-            event.time -= d_time;
+            let event = (&self.events[i]).clone();
             if event.time <= 0f32 {
                 match event.action {
                     Action::AddEntity(entity) => {
@@ -69,7 +71,6 @@ impl Game {
             }
         }
 
-        // TODO: make this more performant in a way that compiles
         let entity_ids: Vec<u64> = self.entities.keys().map(|x| x.clone()).collect();
         for entity_id in entity_ids.iter() {
             self.do_entity(*entity_id, &EntityAction::Update(d_time));
