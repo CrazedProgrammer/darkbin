@@ -1,10 +1,12 @@
-use game::entity::{Entity, EntityShape};
+use game::entity::{Entity, EntityShape, EntityType};
 use game::event::{Event, EntityAction, Action};
 use game::state::GameState;
 use gfx::assets::Asset;
 use sdl2::keyboard::Scancode;
 use std::rc::Rc;
 use util::Vec2;
+
+const PLAYER_SPEED: f32 = 200f32;
 
 #[derive(Clone)]
 pub struct Player {
@@ -24,16 +26,26 @@ impl Entity for Player {
         let mut actions: Vec<Event> = vec![];
         match action {
             &EntityAction::Init => {
+                shape.entity_type = EntityType::Player;
                 shape.position = Vec2::new(self.x, 0f32);
                 shape.size = Vec2::new(32f32, 32f32);
                 shape.texture = Asset::Test;
             },
             &EntityAction::Update(d_time) => {
-                if state.input.get_key(Scancode::Space) {
-                    shape.position.x += 60f32 * d_time;
-                    if state.input.get_key_down(Scancode::Space) {
-                        actions.push(Event::new(0f32, Action::AddEntity(Rc::new(Player::new(shape.position.x + 10f32)))));
-                    }
+                if state.input.get_key(Scancode::W) {
+                    shape.position.y -= PLAYER_SPEED * d_time;
+                }
+                if state.input.get_key(Scancode::A) {
+                    shape.position.x -= PLAYER_SPEED * d_time;
+                }
+                if state.input.get_key(Scancode::S) {
+                    shape.position.y += PLAYER_SPEED * d_time;
+                }
+                if state.input.get_key(Scancode::D) {
+                    shape.position.x += PLAYER_SPEED * d_time;
+                }
+                if state.input.get_key_down(Scancode::Space) {
+                    actions.push(Event::new(0f32, Action::AddEntity(Rc::new(Player::new(shape.position.x + 10f32)))));
                 }
             },
         }

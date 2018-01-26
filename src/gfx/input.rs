@@ -10,6 +10,7 @@ pub struct Input {
     mouse_buttons: HashMap<MouseButton, bool>,
     prev_mouse_buttons: HashMap<MouseButton, bool>,
     pub mouse_pos: Point,
+    pub mouse_wheel: i32,
 }
 
 impl Input {
@@ -20,12 +21,14 @@ impl Input {
             mouse_buttons: HashMap::new(),
             prev_mouse_buttons: HashMap::new(),
             mouse_pos: Point::new(0, 0),
+            mouse_wheel: 0,
         }
     }
 
     pub fn push_next(&mut self) {
         self.prev_keys = self.keys.clone();
         self.prev_mouse_buttons = self.mouse_buttons.clone();
+        self.mouse_wheel = 0;
     }
 
     // getters

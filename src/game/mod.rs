@@ -1,7 +1,8 @@
 use game::entity::{Entity,EntityShape};
 use game::entity::player::Player;
+use game::entity::camera::Camera;
 use gfx::input::Input;
-use gfx::assets::{Assets, Asset};
+use gfx::assets::Assets;
 use sdl2::render::{Canvas};
 use sdl2::video::{Window};
 use sdl2::pixels::{Color};
@@ -10,7 +11,7 @@ use game::event::{Event,Action,EntityAction};
 use game::state::GameState;
 use std::rc::Rc;
 use std::collections::HashMap;
-use util::{Hasher,Vec2};
+use util::{Hasher,Vec2,rect_part};
 
 mod entity;
 mod event;
@@ -37,8 +38,9 @@ impl Game {
     }
 
     pub fn init(&mut self) {
+        self.events.push(Event::new(0f32, Action::AddEntity(Rc::new(Camera::new()))));
         self.events.push(Event::new(0f32, Action::AddEntity(Rc::new(Player::new(0f32)))));
-        self.state.viewport.zoom = 10f32;
+        self.state.viewport.zoom = 2f32;
     }
 
     pub fn update(&mut self, input: &Input, d_time: f32) {
@@ -63,6 +65,9 @@ impl Game {
                     Action::RemoveEntity(entity_id) => {
                         self.remove_entity(entity_id);
                     },
+                    Action::ChangeViewport(viewport) => {
+                        self.state.viewport = viewport;
+                    },
                 }
                 self.events.remove(i);
             } else {
@@ -83,12 +88,34 @@ impl Game {
         if DISABLE_DRAW {
             return;
         }
+        let window_size_raw = canvas.window().size();
+        let window_size = Vec2::new(window_size_raw.0 as f32, window_size_raw.1 as f32);
+
+        // tilemap drawing
+        let map = assets.get_map(&self.state.current_map);
+        for layer in map.layers.iter() {
+            for (y, tile_row) in layer.tiles.iter().enumerate() {
+                for (x, gid) in tile_row.iter().enumerate() {
+                    if gid == &0u32 {
+                        continue;
+                    }
+                    // TODO: definitely build a cache of this!!!!
+                    let tileset = map.get_tileset_by_gid(*gid).unwrap();
+                    let texture = assets.get_map_texture(&self.state.current_map, &tileset.images[0].source);
+                    let texture_query = texture.query();
+                    let relative_gid = gid - tileset.first_gid;
+                    let tile_part = rect_part(relative_gid, tileset.tile_width, tileset.tile_height, texture_query.width);
+                    let tile_size = Vec2::new(tileset.tile_width as f32, tileset.tile_height as f32);
+                    let tile_position = Vec2::new(x as f32, y as f32) * tile_size;
+                    let tile_screen_rect = self.rect_to_screen(tile_position, tile_size, window_size);
+                    canvas.copy(texture, tile_part, Some(tile_screen_rect)).unwrap();
+                }
+            }
+        }
 
         // entity drawing
         for shape_pair in self.state.shapes.iter() {
             let shape = shape_pair.1;
-            let window_size_raw = canvas.window().size();
-            let window_size = Vec2::new(window_size_raw.0 as f32, window_size_raw.1 as f32);
             let rect = self.rect_to_screen(shape.position - shape.size / 2f32, shape.size, window_size);
 
             canvas.copy(&assets.get_texture(&shape.texture), shape.texture_area, Some(rect)).unwrap();
@@ -122,11 +149,13 @@ impl Game {
         self.state.shapes.remove(&entity_id);
     }
 
+    #[inline]
     fn position_to_screen(&self, position: Vec2, window_size: Vec2) -> Point {
         let pos = (position - self.state.viewport.position) * self.state.viewport.zoom + window_size / 2f32;
         Point::new(pos.x as i32, pos.y as i32)
     }
 
+    #[inline]
     fn rect_to_screen(&self, position: Vec2, size: Vec2, window_size: Vec2) -> Rect {
         let lefttop_point = self.position_to_screen(position, window_size);
         let rightbottom = position + size;

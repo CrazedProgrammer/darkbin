@@ -8,6 +8,8 @@ use sdl2::image::{INIT_PNG, INIT_JPG};
 use sdl2::rect::Point;
 use sdl2::event::Event;
 
+const ENABLE_VSYNC: bool = false;
+
 pub fn main_loop(game: &mut Game) {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -18,7 +20,14 @@ pub fn main_loop(game: &mut Game) {
         .resizable()
         .build().unwrap();
 
-    let mut canvas = window.into_canvas().present_vsync().build().unwrap();
+    let mut canvas;
+    {
+        let mut canvasbuilder = window.into_canvas();
+        if ENABLE_VSYNC {
+            canvasbuilder = canvasbuilder.present_vsync();
+        }
+        canvas = canvasbuilder.build().unwrap();
+    }
     let mut texture_creator = canvas.texture_creator();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
@@ -54,6 +63,10 @@ pub fn main_loop(game: &mut Game) {
 
                 Event::MouseMotion {x, y, ..} => {
                     input.mouse_pos = Point::new(x, y);
+                },
+
+                Event::MouseWheel {y, ..} => {
+                    input.mouse_wheel = y;
                 }
 
                 _ => {},

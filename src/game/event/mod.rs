@@ -1,5 +1,6 @@
 use game::entity::Entity;
 use std::rc::Rc;
+use gfx::viewport::Viewport;
 
 #[derive(Clone)]
 pub struct Event {
@@ -21,6 +22,7 @@ pub enum Action {
     AddEntity(Rc<Entity>),
     DoEntity(u64, EntityAction),
     RemoveEntity(u64),
+    ChangeViewport(Viewport),
 }
 
 #[derive(Clone)]

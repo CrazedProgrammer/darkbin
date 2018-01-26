@@ -1,6 +1,6 @@
 use util::Vec2;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Viewport {
     pub position: Vec2,
     pub zoom: f32,
