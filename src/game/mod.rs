@@ -5,12 +5,12 @@ use gfx::assets::{Assets, Asset};
 use sdl2::render::{Canvas};
 use sdl2::video::{Window};
 use sdl2::pixels::{Color};
-use sdl2::rect::Rect;
+use sdl2::rect::{Point, Rect};
 use game::event::{Event,Action,EntityAction};
 use game::state::GameState;
 use std::rc::Rc;
 use std::collections::HashMap;
-use util::Hasher;
+use util::{Hasher,Vec2};
 
 mod entity;
 mod event;
@@ -84,23 +84,21 @@ impl Game {
             return;
         }
 
+        // entity drawing
         for shape_pair in self.state.shapes.iter() {
             let shape = shape_pair.1;
-            let window_size = canvas.window().size();
-            let center_x: f32 = (shape.position.0 - self.state.viewport.position.0) * self.state.viewport.zoom + (window_size.0 as f32) / 2f32;
-            let center_y: f32 = (shape.position.1 - self.state.viewport.position.1) * self.state.viewport.zoom + (window_size.1 as f32) / 2f32;
-            let width: f32 = shape.size.0 * self.state.viewport.zoom;
-            let height: f32 = shape.size.1 * self.state.viewport.zoom;
-            let x: i32 = (center_x - width / 2f32) as i32;
-            let y: i32 = (center_y - height / 2f32) as i32;
-            canvas.copy(&assets.get_texture(&shape.texture), None, Some(Rect::new(x, y, width as u32, height as u32))).unwrap();
+            let window_size_raw = canvas.window().size();
+            let window_size = Vec2::new(window_size_raw.0 as f32, window_size_raw.1 as f32);
+            let rect = self.rect_to_screen(shape.position - shape.size / 2f32, shape.size, window_size);
+
+            canvas.copy(&assets.get_texture(&shape.texture), shape.texture_area, Some(rect)).unwrap();
         }
     }
 
     fn add_entity(&mut self, entity: Rc<Entity>) -> u64 {
         let entity_id = self.next_entity_id;
         self.entities.insert(entity_id, entity);
-        self.state.shapes.insert(entity_id, EntityShape::new(entity_id, (0f32, 0f32), (0f32, 0f32), Asset::None));
+        self.state.shapes.insert(entity_id, EntityShape::new(entity_id));
         self.events.push(Event::new(0f32, Action::DoEntity(entity_id, EntityAction::Init)));
         self.next_entity_id += 1u64;
         entity_id
@@ -122,5 +120,18 @@ impl Game {
     fn remove_entity(&mut self, entity_id: u64) {
         self.entities.remove(&entity_id);
         self.state.shapes.remove(&entity_id);
+    }
+
+    fn position_to_screen(&self, position: Vec2, window_size: Vec2) -> Point {
+        let pos = (position - self.state.viewport.position) * self.state.viewport.zoom + window_size / 2f32;
+        Point::new(pos.x as i32, pos.y as i32)
+    }
+
+    fn rect_to_screen(&self, position: Vec2, size: Vec2, window_size: Vec2) -> Rect {
+        let lefttop_point = self.position_to_screen(position, window_size);
+        let rightbottom = position + size;
+        let rightbottom_point = self.position_to_screen(rightbottom, window_size);
+        let size_point = rightbottom_point - lefttop_point;
+        Rect::new(lefttop_point.x, lefttop_point.y, size_point.x as u32, size_point.y as u32)
     }
 }

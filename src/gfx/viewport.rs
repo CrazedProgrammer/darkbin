@@ -1,13 +1,15 @@
+use util::Vec2;
+
 #[derive(Clone)]
 pub struct Viewport {
-    pub position: (f32, f32),
+    pub position: Vec2,
     pub zoom: f32,
 }
 
 impl Viewport {
     pub fn new() -> Viewport {
         Viewport {
-            position: (0f32, 0f32),
+            position: Vec2::new(0f32, 0f32),
             zoom: 1f32,
         }
     }

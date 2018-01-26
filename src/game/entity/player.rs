@@ -4,6 +4,7 @@ use game::state::GameState;
 use gfx::assets::Asset;
 use sdl2::keyboard::Scancode;
 use std::rc::Rc;
+use util::Vec2;
 
 #[derive(Clone)]
 pub struct Player {
@@ -23,15 +24,15 @@ impl Entity for Player {
         let mut actions: Vec<Event> = vec![];
         match action {
             &EntityAction::Init => {
-                shape.position = (self.x, 0f32);
-                shape.size = (32f32, 32f32);
+                shape.position = Vec2::new(self.x, 0f32);
+                shape.size = Vec2::new(32f32, 32f32);
                 shape.texture = Asset::Test;
             },
             &EntityAction::Update(d_time) => {
                 if state.input.get_key(Scancode::Space) {
-                    shape.position.0 += 60f32 * d_time;
+                    shape.position.x += 60f32 * d_time;
                     if state.input.get_key_down(Scancode::Space) {
-                        actions.push(Event::new(0f32, Action::AddEntity(Rc::new(Player::new(shape.position.0 + 10f32)))));
+                        actions.push(Event::new(0f32, Action::AddEntity(Rc::new(Player::new(shape.position.x + 10f32)))));
                     }
                 }
             },

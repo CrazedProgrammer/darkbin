@@ -3,6 +3,7 @@ extern crate tiled;
 extern crate sdl2;
 extern crate time;
 extern crate fnv;
+extern crate vek;
 #[macro_use]
 mod util;
 mod gfx;
