@@ -9,7 +9,7 @@ pub type Vec2 = vek::Vec2<f32>;
 macro_rules! map(
     { $($key:expr => $value:expr),+ } => {
         {
-            let mut m = ::std::collections::HashMap::new();
+            let mut m = ::std::collections::HashMap::<_,_,Hasher>::default();
             $(
                 m.insert($key, $value);
             )+

@@ -2,8 +2,6 @@ use game::entity::{Entity, EntityShape, EntityType};
 use game::event::{Event, EntityAction, Action};
 use game::state::GameState;
 use gfx::assets::Asset;
-use sdl2::keyboard::Scancode;
-use util::Vec2;
 
 #[derive(Clone)]
 pub struct Camera {
@@ -24,7 +22,7 @@ impl Entity for Camera {
                 shape.entity_type = EntityType::Camera;
                 shape.texture = Asset::Empty;
             },
-            &EntityAction::Update(d_time) => {
+            &EntityAction::Update(_d_time) => {
                 let mut viewport = state.viewport.clone();
                 viewport.zoom += state.input.mouse_wheel as f32 * 0.5f32;
                 if viewport.zoom <= 0f32 {

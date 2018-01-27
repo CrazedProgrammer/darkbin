@@ -2,17 +2,18 @@ use process_path::get_executable_path;
 use sdl2::image::LoadTexture;
 use sdl2::render::{Texture,TextureCreator};
 use sdl2::video::WindowContext;
+use sdl2::rect::Rect;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::ffi::OsStr;
 use std::rc::Rc;
-use util::Hasher;
+use util::{Hasher,rect_part};
 use tiled::{parse_file, Map};
 
 pub struct Assets<'a> {
     textures: HashMap<Asset, Rc<Texture<'a>>, Hasher>,
     maps: HashMap<Asset, Rc<Map>, Hasher>,
-    map_textures: HashMap<Asset, HashMap<String, Rc<Texture<'a>>, Hasher>, Hasher>,
+    map_gids: HashMap<Asset, HashMap<u32, (Rc<Texture<'a>>, Rect), Hasher>, Hasher>,
 }
 
 impl<'a> Assets<'a> {
@@ -20,7 +21,7 @@ impl<'a> Assets<'a> {
         Assets {
             textures: HashMap::<_, _, _>::default(),
             maps: HashMap::<_, _, _>::default(),
-            map_textures: HashMap::<_, _, _>::default(),
+            map_gids: HashMap::<_, _, _>::default(),
         }
     }
 
@@ -63,8 +64,33 @@ impl<'a> Assets<'a> {
                                 textures.insert(image.source.clone(), Rc::new(creator.load_texture(texture_pathbuf.as_path()).unwrap()));
                             }
                         }
-                        self.map_textures.insert(asset.clone(), textures);
+                        let mut max_gid = 0;
+                        for layer in map.layers.iter() {
+                            for tile_row in layer.tiles.iter() {
+                                for gid in tile_row.iter() {
+                                    if *gid > max_gid {
+                                        max_gid = *gid;
+                                    }
+                                }
+                            }
+                        }
+                        let tile_width = map.tilesets[0].tile_width;
+                        let tile_height = map.tilesets[0].tile_height;
+                        let mut map_gids = HashMap::<u32, (Rc<Texture<'a>>, Rect), Hasher>::default();
+                        for i in 0..(max_gid + 1) {
+                            match map.get_tileset_by_gid(i) {
+                                Some(tileset) => {
+                                    let relative_gid = i - tileset.first_gid;
+                                    let texture = textures.get(&tileset.images[0].source).unwrap().clone();
+                                    let tile_rect = rect_part(relative_gid, tile_width, tile_height, texture.query().width);
+                                    map_gids.insert(i, (texture, tile_rect));
+                                },
+                                None => { },
+                            }
+                        }
+
                         self.maps.insert(asset.clone(), Rc::new(map));
+                        self.map_gids.insert(asset.clone(), map_gids);
                     }
                     _ => {
                         panic!("Unrecognised extension for {}.", asset_file);
@@ -84,9 +110,11 @@ impl<'a> Assets<'a> {
         self.maps.get(asset).unwrap()
     }
 
-    pub fn get_map_texture(&self, asset: &Asset, source: &String) -> &Rc<Texture<'a>> {
-        self.map_textures.get(asset).unwrap().get(source).unwrap()
+    pub fn get_map_gid(&self, asset: &Asset, gid: u32) -> &(Rc<Texture<'a>>, Rect) {
+        self.map_gids.get(asset).unwrap().get(&gid).unwrap()
     }
+
+    //pub fn get_map_gid(&self, asset: &Asset, gid: u64) -> (
 }
 
 #[derive(Eq, PartialEq, Hash, Clone)]

@@ -7,11 +7,13 @@ use sdl2::render::{Canvas};
 use sdl2::video::{Window};
 use sdl2::pixels::{Color};
 use sdl2::rect::{Point, Rect};
+use vek::ops::Clamp;
 use game::event::{Event,Action,EntityAction};
 use game::state::GameState;
 use std::rc::Rc;
 use std::collections::HashMap;
-use util::{Hasher,Vec2,rect_part};
+use util::{Hasher,Vec2};
+use std::f32;
 
 mod entity;
 mod event;
@@ -91,29 +93,38 @@ impl Game {
         let window_size_raw = canvas.window().size();
         let window_size = Vec2::new(window_size_raw.0 as f32, window_size_raw.1 as f32);
 
-        // tilemap drawing
+        self.draw_map(canvas, assets, window_size);
+        self.draw_entities(canvas, assets, window_size);
+    }
+
+    pub fn draw_map(&mut self, canvas: &mut Canvas<Window>, assets: &Assets, window_size: Vec2) {
         let map = assets.get_map(&self.state.current_map);
-        for layer in map.layers.iter() {
-            for (y, tile_row) in layer.tiles.iter().enumerate() {
-                for (x, gid) in tile_row.iter().enumerate() {
-                    if gid == &0u32 {
-                        continue;
+        // NOTE: tile size has to be the same for all layers and tilesets
+        let tile_width = map.tilesets[0].tile_width;
+        let tile_height = map.tilesets[0].tile_height;
+        let horizontal_tiles = map.layers[0].tiles[0].len();
+        let vertical_tiles = map.layers[0].tiles.len();
+        let tiles_rect = self.screen_to_tile_rect(tile_width, tile_height, horizontal_tiles, vertical_tiles, window_size);
+        if tiles_rect.w > 0 && tiles_rect.h > 0 {
+            for layer in map.layers.iter() {
+                for y in (tiles_rect.y)..(tiles_rect.y + tiles_rect.h) {
+                    for x in (tiles_rect.x)..(tiles_rect.x + tiles_rect.w) {
+                        let gid = layer.tiles[y as usize][x as usize];
+                        if gid == 0u32 {
+                            continue;
+                        }
+                        let tile_attrs = assets.get_map_gid(&self.state.current_map, gid);
+                        let tile_size = Vec2::new(tile_width as f32, tile_height as f32);
+                        let tile_position = Vec2::new(x as f32, y as f32) * tile_size;
+                        let tile_screen_rect = self.rect_to_screen(tile_position, tile_size, window_size);
+                        canvas.copy(&tile_attrs.0, Some(tile_attrs.1), Some(tile_screen_rect)).unwrap();
                     }
-                    // TODO: definitely build a cache of this!!!!
-                    let tileset = map.get_tileset_by_gid(*gid).unwrap();
-                    let texture = assets.get_map_texture(&self.state.current_map, &tileset.images[0].source);
-                    let texture_query = texture.query();
-                    let relative_gid = gid - tileset.first_gid;
-                    let tile_part = rect_part(relative_gid, tileset.tile_width, tileset.tile_height, texture_query.width);
-                    let tile_size = Vec2::new(tileset.tile_width as f32, tileset.tile_height as f32);
-                    let tile_position = Vec2::new(x as f32, y as f32) * tile_size;
-                    let tile_screen_rect = self.rect_to_screen(tile_position, tile_size, window_size);
-                    canvas.copy(texture, tile_part, Some(tile_screen_rect)).unwrap();
                 }
             }
         }
+    }
 
-        // entity drawing
+    pub fn draw_entities(&mut self, canvas: &mut Canvas<Window>, assets: &Assets, window_size: Vec2) {
         for shape_pair in self.state.shapes.iter() {
             let shape = shape_pair.1;
             let rect = self.rect_to_screen(shape.position - shape.size / 2f32, shape.size, window_size);
@@ -162,5 +173,23 @@ impl Game {
         let rightbottom_point = self.position_to_screen(rightbottom, window_size);
         let size_point = rightbottom_point - lefttop_point;
         Rect::new(lefttop_point.x, lefttop_point.y, size_point.x as u32, size_point.y as u32)
+    }
+
+    fn screen_to_tile_rect(&self, tile_width: u32, tile_height: u32, horizontal_tiles: usize, vertical_tiles: usize, window_size: Vec2) -> Rect {
+        let tiles = Vec2::new(horizontal_tiles as f32, vertical_tiles as f32);
+        let tile_size = Vec2::new(tile_width as f32, tile_height as f32);
+        let lefttop_tile = (self.state.viewport.position - (window_size / self.state.viewport.zoom) / 2f32) / tile_size;
+        let number_of_tiles = (window_size / self.state.viewport.zoom) / tile_size + 2f32;
+
+        let lefttop_tile_clamped = lefttop_tile.clamped(Vec2::zero(), tiles - 1f32);
+        let mut number_of_tiles_clamped = number_of_tiles;
+        // if the left-top tile is either to the left or above the map, clamp the number of tiles
+        if lefttop_tile.x < 0f32 || lefttop_tile.y < 0f32 {
+            number_of_tiles_clamped = number_of_tiles_clamped.clamped(Vec2::zero(), (number_of_tiles + lefttop_tile - 1f32).clamped(Vec2::zero(), Vec2::new(f32::INFINITY, f32::INFINITY)));
+        }
+        // clamp number of tiles for when the bottom-right tile is to the right or bottom of the map
+        number_of_tiles_clamped = number_of_tiles_clamped.clamped(Vec2::new(0f32, 0f32), tiles - lefttop_tile_clamped.floor());
+
+        Rect::new(lefttop_tile_clamped.x as i32, lefttop_tile_clamped.y as i32, number_of_tiles_clamped.x as u32, number_of_tiles_clamped.y as u32)
     }
 }
