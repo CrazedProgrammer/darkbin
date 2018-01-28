@@ -1,19 +1,19 @@
+use sdl2::render::Canvas;
+use sdl2::video::Window;
+use sdl2::pixels::Color;
+use sdl2::rect::{Point, Rect};
+use vek::ops::Clamp;
+use std::f32;
+use std::rc::Rc;
+use std::collections::HashMap;
+use util::{Hasher,Vec2,optional_origin};
+use gfx::input::Input;
+use gfx::assets::Assets;
 use game::entity::{Entity,EntityShape};
 use game::entity::player::Player;
 use game::entity::camera::Camera;
-use gfx::input::Input;
-use gfx::assets::Assets;
-use sdl2::render::{Canvas};
-use sdl2::video::{Window};
-use sdl2::pixels::{Color};
-use sdl2::rect::{Point, Rect};
-use vek::ops::Clamp;
 use game::event::{Event,Action,EntityAction};
 use game::state::GameState;
-use std::rc::Rc;
-use std::collections::HashMap;
-use util::{Hasher,Vec2};
-use std::f32;
 
 mod entity;
 mod event;
@@ -23,7 +23,7 @@ mod state;
 const DISABLE_DRAW: bool = false;
 
 pub struct Game {
-    state: GameState,
+    pub state: GameState,
     entities: HashMap<u64, Rc<Entity>, Hasher>,
     next_entity_id: u64,
     events: Vec<Event>,
@@ -90,46 +90,40 @@ impl Game {
         if DISABLE_DRAW {
             return;
         }
-        let window_size_raw = canvas.window().size();
-        let window_size = Vec2::new(window_size_raw.0 as f32, window_size_raw.1 as f32);
 
-        self.draw_map(canvas, assets, window_size);
-        self.draw_entities(canvas, assets, window_size);
-    }
-
-    pub fn draw_map(&mut self, canvas: &mut Canvas<Window>, assets: &Assets, window_size: Vec2) {
-        let map = assets.get_map(&self.state.current_map);
-        // NOTE: tile size has to be the same for all layers and tilesets
-        let tile_width = map.tilesets[0].tile_width;
-        let tile_height = map.tilesets[0].tile_height;
-        let horizontal_tiles = map.layers[0].tiles[0].len();
-        let vertical_tiles = map.layers[0].tiles.len();
-        let tiles_rect = self.screen_to_tile_rect(tile_width, tile_height, horizontal_tiles, vertical_tiles, window_size);
-        if tiles_rect.w > 0 && tiles_rect.h > 0 {
-            for layer in map.layers.iter() {
-                for y in (tiles_rect.y)..(tiles_rect.y + tiles_rect.h) {
-                    for x in (tiles_rect.x)..(tiles_rect.x + tiles_rect.w) {
-                        let gid = layer.tiles[y as usize][x as usize];
-                        if gid == 0u32 {
-                            continue;
+        // Draw the map
+        {
+            let map = assets.get_map(&self.state.current_map);
+            // NOTE: tile size has to be the same for all layers and tilesets
+            let tile_width = map.tilesets[0].tile_width;
+            let tile_height = map.tilesets[0].tile_height;
+            let horizontal_tiles = map.layers[0].tiles[0].len();
+            let vertical_tiles = map.layers[0].tiles.len();
+            let tiles_rect = self.screen_to_tile_rect(tile_width, tile_height, horizontal_tiles, vertical_tiles);
+            if tiles_rect.w > 0 && tiles_rect.h > 0 {
+                for layer in map.layers.iter() {
+                    for y in (tiles_rect.y)..(tiles_rect.y + tiles_rect.h) {
+                        for x in (tiles_rect.x)..(tiles_rect.x + tiles_rect.w) {
+                            let gid = layer.tiles[y as usize][x as usize];
+                            if gid == 0u32 {
+                                continue;
+                            }
+                            let tile_attrs = assets.get_map_gid(&self.state.current_map, gid);
+                            let tile_size = Vec2::new(tile_width as f32, tile_height as f32);
+                            let tile_position = Vec2::new(x as f32, y as f32) * tile_size;
+                            let tile_screen_rect = self.rect_to_screen(tile_position, tile_size);
+                            canvas.copy(&tile_attrs.0, Some(tile_attrs.1), Some(tile_screen_rect)).unwrap();
                         }
-                        let tile_attrs = assets.get_map_gid(&self.state.current_map, gid);
-                        let tile_size = Vec2::new(tile_width as f32, tile_height as f32);
-                        let tile_position = Vec2::new(x as f32, y as f32) * tile_size;
-                        let tile_screen_rect = self.rect_to_screen(tile_position, tile_size, window_size);
-                        canvas.copy(&tile_attrs.0, Some(tile_attrs.1), Some(tile_screen_rect)).unwrap();
                     }
                 }
             }
         }
-    }
+        // Draw the entities
+        for shape in self.state.shapes.values() {
+            let rect = self.rect_to_screen(shape.position - shape.size / 2f32, shape.size);
+            let origin = optional_origin(shape.origin, shape.size) * self.state.viewport.zoom;
 
-    pub fn draw_entities(&mut self, canvas: &mut Canvas<Window>, assets: &Assets, window_size: Vec2) {
-        for shape_pair in self.state.shapes.iter() {
-            let shape = shape_pair.1;
-            let rect = self.rect_to_screen(shape.position - shape.size / 2f32, shape.size, window_size);
-
-            canvas.copy(&assets.get_texture(&shape.texture), shape.texture_area, Some(rect)).unwrap();
+            canvas.copy_ex(&assets.get_texture(&shape.texture), shape.texture_area, Some(rect), shape.angle as f64, Point::new(origin.x as i32, origin.y as i32), false, false).unwrap();
         }
     }
 
@@ -161,25 +155,25 @@ impl Game {
     }
 
     #[inline]
-    fn position_to_screen(&self, position: Vec2, window_size: Vec2) -> Point {
-        let pos = (position - self.state.viewport.position) * self.state.viewport.zoom + window_size / 2f32;
+    fn position_to_screen(&self, position: Vec2) -> Point {
+        let pos = (position - self.state.viewport.position) * self.state.viewport.zoom + self.state.viewport.window_size / 2f32;
         Point::new(pos.x as i32, pos.y as i32)
     }
 
     #[inline]
-    fn rect_to_screen(&self, position: Vec2, size: Vec2, window_size: Vec2) -> Rect {
-        let lefttop_point = self.position_to_screen(position, window_size);
+    fn rect_to_screen(&self, position: Vec2, size: Vec2) -> Rect {
+        let lefttop_point = self.position_to_screen(position);
         let rightbottom = position + size;
-        let rightbottom_point = self.position_to_screen(rightbottom, window_size);
+        let rightbottom_point = self.position_to_screen(rightbottom);
         let size_point = rightbottom_point - lefttop_point;
         Rect::new(lefttop_point.x, lefttop_point.y, size_point.x as u32, size_point.y as u32)
     }
 
-    fn screen_to_tile_rect(&self, tile_width: u32, tile_height: u32, horizontal_tiles: usize, vertical_tiles: usize, window_size: Vec2) -> Rect {
+    fn screen_to_tile_rect(&self, tile_width: u32, tile_height: u32, horizontal_tiles: usize, vertical_tiles: usize) -> Rect {
         let tiles = Vec2::new(horizontal_tiles as f32, vertical_tiles as f32);
         let tile_size = Vec2::new(tile_width as f32, tile_height as f32);
-        let lefttop_tile = (self.state.viewport.position - (window_size / self.state.viewport.zoom) / 2f32) / tile_size;
-        let number_of_tiles = (window_size / self.state.viewport.zoom) / tile_size + 2f32;
+        let lefttop_tile = (self.state.viewport.position - (self.state.viewport.window_size / self.state.viewport.zoom) / 2f32) / tile_size;
+        let number_of_tiles = (self.state.viewport.window_size / self.state.viewport.zoom) / tile_size + 2f32;
 
         let lefttop_tile_clamped = lefttop_tile.clamped(Vec2::zero(), tiles - 1f32);
         let mut number_of_tiles_clamped = number_of_tiles;

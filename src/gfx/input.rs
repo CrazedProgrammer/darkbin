@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use sdl2::rect::Point;
 use sdl2::keyboard::Scancode;
 use sdl2::mouse::MouseButton;
+use util::Vec2;
 
 #[derive(Clone)]
 pub struct Input {
@@ -9,7 +10,7 @@ pub struct Input {
     prev_keys: HashMap<Scancode, bool>,
     mouse_buttons: HashMap<MouseButton, bool>,
     prev_mouse_buttons: HashMap<MouseButton, bool>,
-    pub mouse_pos: Point,
+    pub mouse_pos: Vec2,
     pub mouse_wheel: i32,
 }
 
@@ -20,7 +21,7 @@ impl Input {
             prev_keys: HashMap::new(),
             mouse_buttons: HashMap::new(),
             prev_mouse_buttons: HashMap::new(),
-            mouse_pos: Point::new(0, 0),
+            mouse_pos: Vec2::zero(),
             mouse_wheel: 0,
         }
     }

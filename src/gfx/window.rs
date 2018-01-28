@@ -6,16 +6,19 @@ use gfx::input::Input;
 use gfx::assets::Assets;
 use sdl2::image::{INIT_PNG, INIT_JPG};
 use sdl2::rect::Point;
-use sdl2::event::Event;
+use sdl2::event::{Event,WindowEvent};
+use util::Vec2;
 
 const ENABLE_VSYNC: bool = false;
+pub const WINDOW_WIDTH: u32 = 800;
+pub const WINDOW_HEIGHT: u32 = 600;
 
 pub fn main_loop(game: &mut Game) {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let _image_context = sdl2::image::init(INIT_PNG | INIT_JPG).unwrap();
     let window = video_subsystem
-        .window("Game of Powder", 800, 600)
+        .window("Game of Powder", WINDOW_WIDTH, WINDOW_HEIGHT)
         .position_centered()
         .resizable()
         .build().unwrap();
@@ -34,6 +37,7 @@ pub fn main_loop(game: &mut Game) {
     let mut assets = Assets::new();
     assets.load_all(&mut texture_creator);
     game.init();
+    game.state.viewport.window_size = Vec2::new(WINDOW_WIDTH as f32, WINDOW_HEIGHT as f32);
 
     let mut input = Input::new();
     let mut prev_nano_time = time::precise_time_ns();
@@ -62,11 +66,20 @@ pub fn main_loop(game: &mut Game) {
                 },
 
                 Event::MouseMotion {x, y, ..} => {
-                    input.mouse_pos = Point::new(x, y);
+                    input.mouse_pos = Vec2::new(x as f32, y as f32);
                 },
 
                 Event::MouseWheel {y, ..} => {
                     input.mouse_wheel = y;
+                },
+
+                Event::Window {win_event, ..} => {
+                    match win_event {
+                        WindowEvent::SizeChanged(width, height) => {
+                            game.state.viewport.window_size = Vec2::new(width as f32, height as f32);
+                        },
+                        _ => { },
+                    }
                 }
 
                 _ => {},

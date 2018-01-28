@@ -17,6 +17,8 @@ pub struct EntityShape {
     pub entity_type: EntityType,
     pub position: Vec2,
     pub size: Vec2,
+    pub origin: Option<Vec2>,
+    pub angle: f32,
     pub texture: Asset,
     pub texture_area: Option<Rect>,
 }
@@ -28,6 +30,8 @@ impl EntityShape {
             entity_type: EntityType::None,
             position: Vec2::new(0f32, 0f32),
             size: Vec2::new(0f32, 0f32),
+            origin: None,
+            angle: 0f32,
             texture: Asset::None,
             texture_area: None,
         }
