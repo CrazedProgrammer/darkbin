@@ -31,7 +31,8 @@ impl<'a> Assets<'a> {
             Asset::Empty => "empty.png",
             Asset::Test => "test.png",
             Asset::TestMap => "testmap/testmap.tmx",
-            Asset::PlayerP250 => "player/p250.png"
+            Asset::PlayerP250 => "player/p250.png",
+            Asset::MuzzleFlash => "muzzle_flash.png"
         };
 
         let mut assets_dir_pathbuf = PathBuf::from(get_executable_path().unwrap().parent().unwrap().parent().unwrap().parent().unwrap());
@@ -125,4 +126,5 @@ pub enum Asset {
     Empty,
     TestMap,
     PlayerP250,
+    MuzzleFlash,
 }

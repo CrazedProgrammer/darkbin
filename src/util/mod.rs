@@ -1,5 +1,6 @@
 use sdl2::rect::Rect;
 use std::hash::BuildHasherDefault;
+use std::f32;
 use fnv::FnvHasher;
 use vek;
 
@@ -32,4 +33,15 @@ pub fn optional_origin(origin: Option<Vec2>, size: Vec2) -> Vec2 {
         Some(origin) => origin,
         None => size / 2f32,
     }
+}
+
+#[inline]
+pub fn angle_to(from: Vec2, to: Vec2) -> f32 {
+    let difference: Vec2 = to - from;
+    difference.y.atan2(difference.x)
+}
+
+#[inline]
+pub fn to_angle(angle: f32, distance: f32) -> Vec2 {
+    Vec2::new(angle.cos() * distance, angle.sin() * distance)
 }

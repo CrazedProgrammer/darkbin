@@ -4,6 +4,7 @@ use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
 use vek::ops::Clamp;
 use std::f32;
+use std::f32::consts;
 use std::rc::Rc;
 use std::collections::HashMap;
 use util::{Hasher,Vec2,optional_origin};
@@ -124,7 +125,7 @@ impl Game {
             let screen_origin = origin * self.state.viewport.zoom;
             let rect = self.rect_to_screen(shape.position - origin, shape.size);
 
-            canvas.copy_ex(&assets.get_texture(&shape.texture), shape.texture_area, Some(rect), shape.angle as f64, Point::new(origin.x as i32, origin.y as i32), false, false).unwrap();
+            canvas.copy_ex(&assets.get_texture(&shape.texture), shape.texture_area, Some(rect), shape.angle.to_degrees() as f64, Point::new(screen_origin.x as i32, screen_origin.y as i32), false, false).unwrap();
         }
     }
 

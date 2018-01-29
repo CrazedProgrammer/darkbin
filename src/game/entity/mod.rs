@@ -6,6 +6,7 @@ use util::Vec2;
 
 pub mod player;
 pub mod camera;
+pub mod particle;
 
 pub trait Entity {
     fn do_action(&mut self, action: &EntityAction, game: &GameState, shape: &mut EntityShape) -> Vec<Event>;
@@ -46,4 +47,5 @@ pub enum EntityType {
     None,
     Camera,
     Player,
+    Particle,
 }

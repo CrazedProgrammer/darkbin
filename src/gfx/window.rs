@@ -9,7 +9,7 @@ use sdl2::rect::Point;
 use sdl2::event::{Event,WindowEvent};
 use util::Vec2;
 
-const ENABLE_VSYNC: bool = false;
+const ENABLE_VSYNC: bool = true;
 pub const WINDOW_WIDTH: u32 = 800;
 pub const WINDOW_HEIGHT: u32 = 600;
 
