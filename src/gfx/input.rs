@@ -12,6 +12,7 @@ pub struct Input {
     prev_mouse_buttons: HashMap<MouseButton, bool>,
     pub mouse_pos: Vec2,
     pub mouse_wheel: i32,
+    pub window_size: Vec2,
 }
 
 impl Input {
@@ -23,6 +24,7 @@ impl Input {
             prev_mouse_buttons: HashMap::new(),
             mouse_pos: Vec2::zero(),
             mouse_wheel: 0,
+            window_size: Vec2::zero(),
         }
     }
 

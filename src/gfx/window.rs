@@ -37,9 +37,9 @@ pub fn main_loop(game: &mut Game) {
     let mut assets = Assets::new();
     assets.load_all(&mut texture_creator);
     game.init();
-    game.state.viewport.window_size = Vec2::new(WINDOW_WIDTH as f32, WINDOW_HEIGHT as f32);
 
     let mut input = Input::new();
+    input.window_size = Vec2::new(WINDOW_WIDTH as f32, WINDOW_HEIGHT as f32);
     let mut prev_nano_time = time::precise_time_ns();
 
     'event_loop: loop {
@@ -76,7 +76,7 @@ pub fn main_loop(game: &mut Game) {
                 Event::Window {win_event, ..} => {
                     match win_event {
                         WindowEvent::SizeChanged(width, height) => {
-                            game.state.viewport.window_size = Vec2::new(width as f32, height as f32);
+                            input.window_size = Vec2::new(width as f32, height as f32);
                         },
                         _ => { },
                     }

@@ -41,7 +41,7 @@ impl Entity for Camera {
                 match state.search_first_type(EntityType::Player) {
                     Some(id) => {
                         let player_shape = state.shapes.get(&id).unwrap();
-                        self.target_pos = player_shape.position + (state.input.mouse_pos - state.viewport.window_size / 2f32) * mouse_adjust / state.viewport.zoom;
+                        self.target_pos = player_shape.position + (state.input.mouse_pos - state.input.window_size / 2f32) * mouse_adjust / state.viewport.zoom;
                     },
                     None => { },
                 }

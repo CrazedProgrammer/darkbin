@@ -23,7 +23,7 @@ mod state;
 const DISABLE_DRAW: bool = false;
 
 pub struct Game {
-    pub state: GameState,
+    state: GameState,
     entities: HashMap<u64, Rc<Entity>, Hasher>,
     next_entity_id: u64,
     events: Vec<Event>,
@@ -120,8 +120,9 @@ impl Game {
         }
         // Draw the entities
         for shape in self.state.shapes.values() {
-            let rect = self.rect_to_screen(shape.position - shape.size / 2f32, shape.size);
-            let origin = optional_origin(shape.origin, shape.size) * self.state.viewport.zoom;
+            let origin = optional_origin(shape.origin, shape.size);
+            let screen_origin = origin * self.state.viewport.zoom;
+            let rect = self.rect_to_screen(shape.position - origin, shape.size);
 
             canvas.copy_ex(&assets.get_texture(&shape.texture), shape.texture_area, Some(rect), shape.angle as f64, Point::new(origin.x as i32, origin.y as i32), false, false).unwrap();
         }
@@ -156,7 +157,7 @@ impl Game {
 
     #[inline]
     fn position_to_screen(&self, position: Vec2) -> Point {
-        let pos = (position - self.state.viewport.position) * self.state.viewport.zoom + self.state.viewport.window_size / 2f32;
+        let pos = (position - self.state.viewport.position) * self.state.viewport.zoom + self.state.input.window_size / 2f32;
         Point::new(pos.x as i32, pos.y as i32)
     }
 
@@ -172,8 +173,8 @@ impl Game {
     fn screen_to_tile_rect(&self, tile_width: u32, tile_height: u32, horizontal_tiles: usize, vertical_tiles: usize) -> Rect {
         let tiles = Vec2::new(horizontal_tiles as f32, vertical_tiles as f32);
         let tile_size = Vec2::new(tile_width as f32, tile_height as f32);
-        let lefttop_tile = (self.state.viewport.position - (self.state.viewport.window_size / self.state.viewport.zoom) / 2f32) / tile_size;
-        let number_of_tiles = (self.state.viewport.window_size / self.state.viewport.zoom) / tile_size + 2f32;
+        let lefttop_tile = (self.state.viewport.position - (self.state.input.window_size / self.state.viewport.zoom) / 2f32) / tile_size;
+        let number_of_tiles = (self.state.input.window_size / self.state.viewport.zoom) / tile_size + 2f32;
 
         let lefttop_tile_clamped = lefttop_tile.clamped(Vec2::zero(), tiles - 1f32);
         let mut number_of_tiles_clamped = number_of_tiles;

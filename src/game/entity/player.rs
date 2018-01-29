@@ -3,6 +3,7 @@ use game::event::{Event, EntityAction, Action};
 use game::state::GameState;
 use gfx::assets::Asset;
 use sdl2::keyboard::Scancode;
+use sdl2::rect::Rect;
 use std::rc::Rc;
 use util::Vec2;
 
@@ -28,8 +29,10 @@ impl Entity for Player {
             &EntityAction::Init => {
                 shape.entity_type = EntityType::Player;
                 shape.position = Vec2::new(self.x, 0f32);
-                shape.size = Vec2::new(32f32, 32f32);
-                shape.texture = Asset::Test;
+                shape.size = Vec2::new(32f32, 24f32);
+                shape.texture = Asset::PlayerP250;
+                shape.texture_area = Some(Rect::new(0, 0, 32, 24));
+                shape.origin = Some(Vec2::new(10f32, 12f32));
             },
             &EntityAction::Update(d_time) => {
                 if state.input.get_key(Scancode::W) {
