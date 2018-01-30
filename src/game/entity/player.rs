@@ -62,7 +62,7 @@ impl Entity for Player {
                 self.shoot_left -= d_time;
                 if state.input.get_mouse_button_down(MouseButton::Left) && self.shoot_left <= 0f32 {
                     actions.push(Event::new(0f32, Action::AddEntity(Rc::new(Particle::new(shape.position + to_angle(shape.angle, 22f32), shape.angle, Asset::MuzzleFlash, Vec2::new(12f32, 8f32), Some(Vec2::new(1f32, 3f32)), 0.05f32, angle_to(Vec2::zero(), movement), if moved { PLAYER_SPEED } else { 0f32 })))));
-                    actions.push(Event::new(0f32, Action::AddEntity(Rc::new(Particle::new(shape.position + to_angle(shape.angle, 19f32), shape.angle, Asset::EmptyShell, Vec2::new(4f32, 2f32), Some(Vec2::new(2f32, 1f32)), 100f32, shape.angle - consts::PI / 2f32, 100f32)))));
+                    actions.push(Event::new(0f32, Action::AddEntity(Rc::new(Particle::new(shape.position + to_angle(shape.angle, 16f32), shape.angle, Asset::EmptyShell, Vec2::new(4f32, 2f32), Some(Vec2::new(2f32, 1f32)), 100f32, shape.angle - consts::PI / 2f32, 100f32)))));
                     self.shoot_left = 0.15f32;
                 }
 
