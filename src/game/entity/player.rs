@@ -7,6 +7,7 @@ use sdl2::keyboard::Scancode;
 use sdl2::mouse::MouseButton;
 use sdl2::rect::Rect;
 use std::rc::Rc;
+use std::f32::consts;
 use util::{Vec2,angle_to,to_angle};
 
 const PLAYER_SPEED: f32 = 200f32;
@@ -39,24 +40,29 @@ impl Entity for Player {
                 shape.origin = Some(Vec2::new(10f32, 12f32));
             },
             &EntityAction::Update(d_time) => {
+                // TODO: refactor this
+                let mut movement = Vec2::zero();
                 if state.input.get_key(Scancode::W) {
-                    shape.position.y -= PLAYER_SPEED * d_time;
+                    movement.y -= PLAYER_SPEED;
                 }
                 if state.input.get_key(Scancode::A) {
-                    shape.position.x -= PLAYER_SPEED * d_time;
+                    movement.x -= PLAYER_SPEED;
                 }
                 if state.input.get_key(Scancode::S) {
-                    shape.position.y += PLAYER_SPEED * d_time;
+                    movement.y += PLAYER_SPEED;
                 }
                 if state.input.get_key(Scancode::D) {
-                    shape.position.x += PLAYER_SPEED * d_time;
+                    movement.x += PLAYER_SPEED;
                 }
+                let moved = movement != Vec2::zero();
+                shape.position += movement * d_time;
                 if state.input.get_key_down(Scancode::Space) {
                     actions.push(Event::new(0f32, Action::AddEntity(Rc::new(Player::new(shape.position.x + 10f32)))));
                 }
                 self.shoot_left -= d_time;
                 if state.input.get_mouse_button_down(MouseButton::Left) && self.shoot_left <= 0f32 {
-                    actions.push(Event::new(0f32, Action::AddEntity(Rc::new(Particle::new(shape.position + to_angle(shape.angle, 22f32), shape.angle, Asset::MuzzleFlash, Vec2::new(12f32, 8f32), Some(Vec2::new(1f32, 3f32)), 0.1f32)))));
+                    actions.push(Event::new(0f32, Action::AddEntity(Rc::new(Particle::new(shape.position + to_angle(shape.angle, 22f32), shape.angle, Asset::MuzzleFlash, Vec2::new(12f32, 8f32), Some(Vec2::new(1f32, 3f32)), 0.05f32, angle_to(Vec2::zero(), movement), if moved { PLAYER_SPEED } else { 0f32 })))));
+                    actions.push(Event::new(0f32, Action::AddEntity(Rc::new(Particle::new(shape.position + to_angle(shape.angle, 19f32), shape.angle, Asset::EmptyShell, Vec2::new(4f32, 2f32), Some(Vec2::new(2f32, 1f32)), 100f32, shape.angle - consts::PI / 2f32, 100f32)))));
                     self.shoot_left = 0.15f32;
                 }
 
