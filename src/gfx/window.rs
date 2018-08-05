@@ -1,13 +1,14 @@
 extern crate sdl2;
-extern crate time;
 
 use game::Game;
 use gfx::input::Input;
 use gfx::assets::Assets;
 use sdl2::image::{INIT_PNG, INIT_JPG};
 use sdl2::rect::Point;
+use sdl2::pixels::Color;
 use sdl2::event::{Event,WindowEvent};
 use util::Vec2;
+use util::perf::{Perf, PerfType};
 
 const ENABLE_VSYNC: bool = true;
 pub const WINDOW_WIDTH: u32 = 800;
@@ -40,11 +41,14 @@ pub fn main_loop(game: &mut Game) {
 
     let mut input = Input::new();
     input.window_size = Vec2::new(WINDOW_WIDTH as f32, WINDOW_HEIGHT as f32);
-    let mut prev_nano_time = time::precise_time_ns();
+    let mut perf = Perf::new();
 
     'event_loop: loop {
-        input.push_next();
+        perf.start_interval(PerfType::Total);
 
+        println!("Game time: {:.2} ms  FPS: {:.2}", 1000f64 * (perf.prev_interval(PerfType::Total) - perf.prev_interval(PerfType::VSync)), 1f64 / perf.average_interval_sec(PerfType::Total));
+
+        input.push_next();
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..} => { break 'event_loop; },
@@ -86,14 +90,24 @@ pub fn main_loop(game: &mut Game) {
             }
         }
 
-        let cur_nano_time = time::precise_time_ns();
-        let raw_d_time: f32 = (cur_nano_time - prev_nano_time) as f32 / 1e9f32 ;
+
+        let raw_d_time: f32 = perf.prev_interval(PerfType::Total) as f32;
         let d_time: f32 = if raw_d_time == 0f32 { 1e-9f32 } else { raw_d_time }; // to prevent divide by zero
 
+        perf.start_interval(PerfType::Update);
         game.update(&input, d_time);
-        prev_nano_time = cur_nano_time;
+        perf.end_interval(PerfType::Update);
 
+        canvas.set_draw_color(Color::RGB(255, 255, 255));
+        perf.start_interval(PerfType::VSync);
+        canvas.clear();
+        perf.end_interval(PerfType::VSync);
+
+        perf.start_interval(PerfType::Draw);
         game.draw(&mut canvas, &assets);
+        perf.end_interval(PerfType::Draw);
         canvas.present();
+
+        perf.end_interval(PerfType::Total);
     }
 }

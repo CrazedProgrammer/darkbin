@@ -1,3 +1,5 @@
+pub mod perf;
+
 use sdl2::rect::Rect;
 use std::hash::BuildHasherDefault;
 use std::f32;

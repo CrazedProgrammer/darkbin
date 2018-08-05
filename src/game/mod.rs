@@ -47,7 +47,7 @@ impl Game {
     }
 
     pub fn update(&mut self, input: &Input, d_time: f32) {
-        println!("Entities: {} FPS: {}", self.entities.len(), 1f32 / d_time);
+        print!("Entities: {}  ", self.entities.len());
         self.state.input = input.clone();
 
         for event in self.events.iter_mut() {
@@ -86,8 +86,6 @@ impl Game {
     }
 
     pub fn draw(&mut self, canvas: &mut Canvas<Window>, assets: &Assets) {
-        canvas.set_draw_color(Color::RGB(255, 255, 255));
-        canvas.clear();
         if DISABLE_DRAW {
             return;
         }
