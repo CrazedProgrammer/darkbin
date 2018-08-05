@@ -3,6 +3,8 @@ extern crate time;
 use std::collections::HashMap;
 use util::Hasher;
 
+const GC_INTERVAL: f64 = 10f64;
+
 #[derive(PartialEq, Eq, Hash, Copy, Clone)]
 pub enum PerfType {
     Update,
@@ -14,6 +16,7 @@ pub enum PerfType {
 pub struct Perf {
     interval_log: HashMap<PerfType, Vec<(f64,f64)>, Hasher>,
     previous_time: HashMap<PerfType, f64, Hasher>,
+    previous_gc_time: f64,
 }
 
 impl Perf {
@@ -21,6 +24,7 @@ impl Perf {
         Perf {
             interval_log: HashMap::<_,_,Hasher>::default(),
             previous_time: HashMap::<_,_,Hasher>::default(),
+            previous_gc_time: 0f64,
         }
     }
 
@@ -40,6 +44,7 @@ impl Perf {
             }
         }
         self.previous_time.insert(perf_type, 0f64);
+        self.check_gc(time);
     }
 
     pub fn prev_interval(&self, perf_type: PerfType) -> f64 {
@@ -74,6 +79,15 @@ impl Perf {
                 total_interval / n_intervals as f64
             },
             None => 0f64,
+        }
+    }
+
+    fn check_gc(&mut self, current_time: f64) {
+        if self.previous_gc_time + GC_INTERVAL <= current_time {
+            for (_, interval_entries) in self.interval_log.iter_mut() {
+                interval_entries.retain(|&interval_entry| interval_entry.0 + GC_INTERVAL > current_time);
+            }
+            self.previous_gc_time = current_time;
         }
     }
 }
