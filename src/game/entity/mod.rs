@@ -22,6 +22,21 @@ pub struct EntityShape {
     pub angle: f32,
     pub texture: Asset,
     pub texture_area: Option<Rect>,
+    //pub hitbox: Vec<EntityBox>,
+}
+
+#[derive(Clone)]
+pub struct EntityBox {
+    pub position: Vec2,
+    pub size: f32,
+}
+
+#[derive(Eq, PartialEq, Hash, Clone)]
+pub enum EntityType {
+    None,
+    Camera,
+    Player,
+    Particle,
 }
 
 impl EntityShape {
@@ -42,10 +57,13 @@ impl EntityShape {
     }
 }
 
-#[derive(Eq, PartialEq, Hash, Clone)]
-pub enum EntityType {
-    None,
-    Camera,
-    Player,
-    Particle,
+impl EntityBox {
+    pub fn new(position: Vec2, size: f32) -> EntityBox {
+        EntityBox {
+            position: position,
+            size: size,
+        }
+    }
+
 }
+
