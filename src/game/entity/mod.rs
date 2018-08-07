@@ -7,6 +7,7 @@ use util::Vec2;
 pub mod player;
 pub mod camera;
 pub mod particle;
+pub mod e_crate;
 
 pub trait Entity {
     fn do_action(&mut self, action: &EntityAction, game: &GameState, shape: &mut EntityShape) -> Vec<Event>;
@@ -22,7 +23,7 @@ pub struct EntityShape {
     pub angle: f32,
     pub texture: Asset,
     pub texture_area: Option<Rect>,
-    //pub hitbox: Vec<EntityBox>,
+    pub hitbox: Vec<EntityBox>,
 }
 
 #[derive(Clone)]
@@ -37,6 +38,7 @@ pub enum EntityType {
     Camera,
     Player,
     Particle,
+    Crate,
 }
 
 impl EntityShape {
@@ -50,10 +52,23 @@ impl EntityShape {
             angle: 0f32,
             texture: Asset::None,
             texture_area: None,
+            hitbox: vec![],
         }
     }
+
     pub fn get_id(&self) -> u64 {
         self.id
+    }
+
+    pub fn collides_with(&self, other: &EntityShape) -> bool {
+        for hbox in self.hitbox.iter() {
+            for other_hbox in other.hitbox.iter() {
+                if hbox.relativise(&self).collides_with(&other_hbox.relativise(other)) {
+                    return true;
+                }
+            }
+        }
+        false
     }
 }
 
@@ -65,5 +80,15 @@ impl EntityBox {
         }
     }
 
+    pub fn relativise(&self, shape: &EntityShape) -> EntityBox {
+        EntityBox {
+            position: shape.position + self.position.rotated_z(shape.angle),
+            size: self.size
+        }
+    }
+
+    pub fn collides_with(&self, other: &EntityBox) -> bool {
+        self.position.distance(other.position) < (self.size + other.size) / 2f32
+    }
 }
 

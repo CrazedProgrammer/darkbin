@@ -52,6 +52,7 @@ impl Entity for Camera {
                     actions.push(Event::new(0f32, Action::ChangeViewport(viewport)));
                 }
             },
+            _ => { },
         }
         actions
     }

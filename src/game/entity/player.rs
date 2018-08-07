@@ -1,4 +1,4 @@
-use game::entity::{Entity, EntityShape, EntityType};
+use game::entity::{Entity, EntityShape, EntityBox, EntityType};
 use game::entity::particle::Particle;
 use game::event::{Event, EntityAction, Action};
 use game::state::GameState;
@@ -38,6 +38,8 @@ impl Entity for Player {
                 shape.texture = Asset::PlayerP250;
                 shape.texture_area = Some(Rect::new(0, 0, 32, 24));
                 shape.origin = Some(Vec2::new(10f32, 12f32));
+                shape.hitbox.push(EntityBox::new(Vec2::new(12f32, 0f32), 24f32));
+                shape.hitbox.push(EntityBox::new(Vec2::new(-20f32, 0f32), 12f32));
             },
             &EntityAction::Update(d_time) => {
                 // TODO: refactor this
@@ -68,6 +70,9 @@ impl Entity for Player {
 
                 shape.angle = angle_to(state.input.window_size / 2f32, state.input.mouse_pos);
                 shape.texture_area = Some(Rect::new(if self.shoot_left > 0f32 { 32 } else { 0 }, 0, 32, 24));
+            },
+            &EntityAction::CollideWith(other_id) => {
+                println!("aa im colliding {} {}", shape.get_id(), other_id);
             },
         }
         actions

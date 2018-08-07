@@ -7,12 +7,14 @@ use std::f32;
 use std::f32::consts;
 use std::rc::Rc;
 use std::collections::HashMap;
+use std::mem;
 use util::{Hasher,Vec2,optional_origin};
 use gfx::input::Input;
 use gfx::assets::Assets;
 use game::entity::{Entity,EntityShape};
 use game::entity::player::Player;
 use game::entity::camera::Camera;
+use game::entity::e_crate::Crate;
 use game::event::{Event,Action,EntityAction};
 use game::state::GameState;
 
@@ -43,6 +45,7 @@ impl Game {
     pub fn init(&mut self) {
         self.events.push(Event::new(0f32, Action::AddEntity(Rc::new(Camera::new()))));
         self.events.push(Event::new(0f32, Action::AddEntity(Rc::new(Player::new(0f32)))));
+        self.events.push(Event::new(0f32, Action::AddEntity(Rc::new(Crate::new(Vec2::new(100f32, 100f32))))));
         self.state.viewport.zoom = 2f32;
     }
 
@@ -79,6 +82,32 @@ impl Game {
             }
         }
 
+        // check collisions
+        let mut collisions: Vec<(u64, u64)> = vec![];
+        for shape in self.state.shapes.values() {
+            for other_shape in self.state.shapes.values() {
+                if shape.get_id() != other_shape.get_id() {
+                    if shape.collides_with(other_shape) {
+                        collisions.push((shape.get_id(), other_shape.get_id()));
+                    }
+                }
+            }
+        }
+        for (mut shape_id, mut other_shape_id) in collisions.iter_mut() {
+            if other_shape_id > shape_id {
+                mem::swap(&mut shape_id, &mut other_shape_id);
+            }
+        }
+        collisions.iter().map(|x| println!("{} {}", x.0, x.1));
+        collisions.sort_unstable();
+        collisions.dedup_by(|a, b| a.0 == b.0 && a.1 == b.1);
+        for (shape_id, other_shape_id) in collisions.iter() {
+            self.do_entity(*shape_id, &EntityAction::CollideWith(*other_shape_id));
+            //self.do_entity(*other_shape_id, &EntityAction::CollideWith(*shape_id));
+            // TODO: what causes duplicates????
+        }
+
+        // update event every frame
         let entity_ids: Vec<u64> = self.entities.keys().map(|x| x.clone()).collect();
         for entity_id in entity_ids.iter() {
             self.do_entity(*entity_id, &EntityAction::Update(d_time));
@@ -124,6 +153,15 @@ impl Game {
             let rect = self.rect_to_screen(shape.position - origin, shape.size);
 
             canvas.copy_ex(&assets.get_texture(&shape.texture), shape.texture_area, Some(rect), shape.angle.to_degrees() as f64, Point::new(screen_origin.x as i32, screen_origin.y as i32), false, false).unwrap();
+        }
+        // Draw the hitboxes
+        for shape in self.state.shapes.values() {
+            for hbox in shape.hitbox.iter() {
+                let rhbox = hbox.relativise(shape);
+                let sizev2 = Vec2::new(rhbox.size, rhbox.size);
+                let rect = self.rect_to_screen(rhbox.position - sizev2 / 2f32, sizev2);
+                canvas.draw_rect(Rect::new(rect.x as i32, rect.y as i32, rect.w as u32, rect.h as u32));
+            }
         }
     }
 

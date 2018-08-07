@@ -29,4 +29,5 @@ pub enum Action {
 pub enum EntityAction {
     Init,
     Update(f32),
+    CollideWith(u64),
 }

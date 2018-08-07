@@ -72,6 +72,7 @@ impl Entity for Particle {
                     actions.push(Event::new(0f32, Action::RemoveEntity(shape.get_id())));
                 }
             },
+            _ => { },
         }
         actions
     }
